@@ -3,15 +3,16 @@ import os
 import time        
 
 class NodePuzzle:
-    def __init__(self, parent, puzzle, empty_tile, f, g):
+    def __init__(self, parent, puzzle, empty_tile, f, g, level):
         self.parent = parent
         self.puzzle = puzzle
         self.empty_tile = empty_tile
         self.f = f
         self.g = g
+        self.level = level
 
     def __lt__(self, next):
-        return self.f + self.g <= next.f + next.g
+        return self.g + self.level <= next.g + next.level
 
 def readPuzzle(file_name): 
     file_path = os.getcwd()
@@ -51,7 +52,7 @@ def isPossibleToSolve(puzzle) :
     
     return True
 
-def kurang(i, puzzle, position):
+def kurang(i, position):
     res = 0
     curPosition = position[i]
     for j in range(1, i):
@@ -74,7 +75,7 @@ def nextPuzzle(source_puzzle, moves, costs_f):
         cur[source_empty_tile] = cur[move]
         cur[move] = 16
         
-        next_puzzle = NodePuzzle(source_puzzle, tuple(cur), move, new_f, new_g)
+        next_puzzle = NodePuzzle(source_puzzle, tuple(cur), move, new_f, new_g, source_puzzle.level + 1)
         list_next_puzzle.append(next_puzzle)
         
     return list_next_puzzle
@@ -126,7 +127,7 @@ def solvePuzzle(source):
     moves = generateMove()
     costs_f = generateCostF(position[16])
     
-    source_puzzle = NodePuzzle(None, source, position[16], costs_f[position[16]], costG(source))
+    source_puzzle = NodePuzzle(None, source, position[16], costs_f[position[16]], costG(source), 0)
     target = tuple([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
     visited = set()
     prio_queue = queue.PriorityQueue()
@@ -144,7 +145,7 @@ def solvePuzzle(source):
         for next_puzzle in list_next_puzzle:
             if next_puzzle.puzzle in visited:
                 continue
-            if next_puzzle.puzzle == target:
+            if next_puzzle.g == 0:
                 return next_puzzle
             visited.add(next_puzzle.puzzle)
             prio_queue.put(next_puzzle)
@@ -162,7 +163,8 @@ if __name__ == "__main__" :
         print(f"Waktu: {timeAfter-timeBefore}")
         
         result_path = []
-        
+        print(solved_node.f)
+        print(solved_node.g)
         while solved_node != None:
             result_path.append(solved_node.puzzle)
             solved_node = solved_node.parent
@@ -174,5 +176,7 @@ if __name__ == "__main__" :
                     print() 
             print() 
         
-        timeAfter = time.time()
-        print(f"Waktu: {timeAfter-timeBefore}")
+        print(len(result_path))
+        
+        timeAfter2 = time.time()
+        print(f"Waktu: {timeAfter2-timeBefore}")
