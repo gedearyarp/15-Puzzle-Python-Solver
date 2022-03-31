@@ -12,7 +12,7 @@ class NodePuzzle:
         self.level = level
 
     def __lt__(self, next):
-        return self.g + self.level <= next.g + next.level
+        return self.f + self.g + self.level <= next.f + next.g + next.level
 
 def readPuzzle(file_name): 
     file_path = os.getcwd()
@@ -40,7 +40,7 @@ def isPossibleToSolve(puzzle) :
         position[puzzle[i]] = i
 
     for i in range(16):
-        kurang_sum += kurang(i+1, puzzle, position)
+        kurang_sum += kurang(i+1, position)
         
     if(position[16] in plusOne):
         kurang_sum += 1
@@ -60,22 +60,25 @@ def kurang(i, position):
             res += 1
     return res
 
-def nextPuzzle(source_puzzle, moves, costs_f):
+def nextPuzzle(source_puzzle, moves, costs_f, visited):
     list_next_puzzle = []
     source_empty_tile = source_puzzle.empty_tile
-    for move in moves[source_empty_tile]:    
+    for move in moves[source_empty_tile]:
+        cur = list(source_puzzle.puzzle)
+        cur[source_empty_tile] = cur[move]
+        cur[move] = 16
+        cur = tuple(cur)
+        if cur in visited:
+            continue
+        
         new_f = costs_f[move]
         new_g = source_puzzle.g
         if source_puzzle.puzzle[move] != move + 1:
             new_g -= 1
         if source_puzzle.puzzle[move] != source_empty_tile + 1:
             new_g += 1
-            
-        cur = list(source_puzzle.puzzle)
-        cur[source_empty_tile] = cur[move]
-        cur[move] = 16
         
-        next_puzzle = NodePuzzle(source_puzzle, tuple(cur), move, new_f, new_g, source_puzzle.level + 1)
+        next_puzzle = NodePuzzle(source_puzzle, cur, move, new_f, new_g, source_puzzle.level + 1)
         list_next_puzzle.append(next_puzzle)
         
     return list_next_puzzle
@@ -137,15 +140,15 @@ def solvePuzzle(source):
     
     visited.add(source)
     prio_queue.put(source_puzzle)
-
+    total_simpul = 1
     while not prio_queue.empty():
         cur_puzzle = prio_queue.get()
 
-        list_next_puzzle = nextPuzzle(cur_puzzle, moves, costs_f)
+        list_next_puzzle = nextPuzzle(cur_puzzle, moves, costs_f, visited)
         for next_puzzle in list_next_puzzle:
-            if next_puzzle.puzzle in visited:
-                continue
+            total_simpul += 1
             if next_puzzle.g == 0:
+                print(f"Total simpul: {total_simpul}")
                 return next_puzzle
             visited.add(next_puzzle.puzzle)
             prio_queue.put(next_puzzle)
@@ -163,8 +166,7 @@ if __name__ == "__main__" :
         print(f"Waktu: {timeAfter-timeBefore}")
         
         result_path = []
-        print(solved_node.f)
-        print(solved_node.g)
+
         while solved_node != None:
             result_path.append(solved_node.puzzle)
             solved_node = solved_node.parent
@@ -173,8 +175,8 @@ if __name__ == "__main__" :
             for j in range(16):
                 print(result_path[i][j], end=" ")
                 if j%4 == 3:
-                    print() 
-            print() 
+                    print()
+            print()
         
         print(len(result_path))
         
