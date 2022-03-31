@@ -1,6 +1,6 @@
-import numpy as np
 import queue
-import os        
+import os
+import time        
 
 class NodePuzzle:
     def __init__(self, parent, puzzle, empty_tile, f, g):
@@ -63,18 +63,18 @@ def nextPuzzle(source_puzzle, moves, costs_f):
     list_next_puzzle = []
     source_empty_tile = source_puzzle.empty_tile
     for move in moves[source_empty_tile]:    
-        new_f = costs_f(move)
+        new_f = costs_f[move]
         new_g = source_puzzle.g
-        if source_puzzle.puzzle[move] == move + 1:
+        if source_puzzle.puzzle[move] != move + 1:
             new_g -= 1
-        elif source_puzzle.puzzle[move] == source_empty_tile + 1:
+        if source_puzzle.puzzle[move] != source_empty_tile + 1:
             new_g += 1
             
         cur = list(source_puzzle.puzzle)
         cur[source_empty_tile] = cur[move]
         cur[move] = 16
         
-        next_puzzle = NodePuzzle(source_puzzle, cur, move, new_f, new_g)
+        next_puzzle = NodePuzzle(source_puzzle, tuple(cur), move, new_f, new_g)
         list_next_puzzle.append(next_puzzle)
         
     return list_next_puzzle
@@ -130,21 +130,24 @@ def solvePuzzle(source):
     target = tuple([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
     visited = set()
     prio_queue = queue.PriorityQueue()
-    
+
     if source == target:
         return source_puzzle
     
     visited.add(source)
     prio_queue.put(source_puzzle)
 
-    # while not prio_queue.empty():
-    #     cur_puzzle = prio_queue.get()
-    #     list_next_puzzle = nextPuzzle(cur_puzzle, moves, costs_f)
-    #     for next_puzzle in list_next_puzzle:
-            
-            
-        
-    # return ans
+    while not prio_queue.empty():
+        cur_puzzle = prio_queue.get()
+
+        list_next_puzzle = nextPuzzle(cur_puzzle, moves, costs_f)
+        for next_puzzle in list_next_puzzle:
+            if next_puzzle.puzzle in visited:
+                continue
+            if next_puzzle.puzzle == target:
+                return next_puzzle
+            visited.add(next_puzzle.puzzle)
+            prio_queue.put(next_puzzle)
 
 if __name__ == "__main__" :
     fileName = str(input())
@@ -153,12 +156,23 @@ if __name__ == "__main__" :
     if not isPossibleToSolve(source):
         print("tidak mungkin selesai!")
     else :
-        solvePuzzle(source)
-
+        timeBefore = time.time()
+        solved_node = solvePuzzle(source)
+        timeAfter = time.time()
+        print(f"Waktu: {timeAfter-timeBefore}")
         
+        result_path = []
         
+        while solved_node != None:
+            result_path.append(solved_node.puzzle)
+            solved_node = solved_node.parent
         
+        for i in range(len(result_path)-1, -1, -1):
+            for j in range(16):
+                print(result_path[i][j], end=" ")
+                if j%4 == 3:
+                    print() 
+            print() 
         
-        
-        
-        
+        timeAfter = time.time()
+        print(f"Waktu: {timeAfter-timeBefore}")
