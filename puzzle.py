@@ -1,3 +1,4 @@
+import numpy as np
 import queue
 import time
 import os
@@ -16,7 +17,6 @@ class NodePuzzle:
 def readPuzzle(file_name): 
     file_path = os.getcwd()
     file_path += f"//test//{file_name}"
-    print(file_path)
     
     try:
         source = []
@@ -40,7 +40,6 @@ def nilaiKurang(puzzle) :
         nilai_kurang += kurang(i+1, position)
     if position[16] in plusOne:
         nilai_kurang += 1
-        
     return nilai_kurang
 
 def kurang(i, position):
@@ -79,6 +78,15 @@ def nextPuzzle(source_puzzle, moves, visited):
         list_next_puzzle.append(next_puzzle)
     return list_next_puzzle
 
+def costG(puzzle):
+    diff = 0
+    for i in range(16):
+        if puzzle[i] == 16:
+            continue
+        elif puzzle[i] != i+1:
+            diff+=1
+    return diff
+
 def generateMove():
     moves = {}
     moves[0] = [1, 4]
@@ -98,15 +106,6 @@ def generateMove():
     moves[14] = [10, 13, 15]
     moves[15] = [11, 14]
     return moves  
-
-def costG(puzzle):
-    diff = 0
-    for i in range(16):
-        if puzzle[i] == 16:
-            continue
-        elif puzzle[i] != i+1:
-            diff+=1
-    return diff
 
 def solvePuzzle(source):
     position = findPosition(source)
@@ -153,14 +152,9 @@ if __name__ == "__main__" :
             solved_node = solved_node.parent
         
         for i in range(len(result_path)-1, -1, -1):
-            for k in range(0,4):
-                print("[", end=" ")
-                for j in range(k*4,k*4+4):
-                    print(result_path[i][j], end=" ")
-                print("]")
-            print()
+            print(np.array(result_path[i]).reshape(4,4), '\n')
         
         print(f"Nilai Kurang        = {nilai_kurang}")
-        print(f"Total Langkah       = {len(result_path)-1}")
-        print(f"Waktu               = {(((timeAfter2-timeBefore)*100)//1)/100}")
-        print(f"Simpul Dibangkitkan = {total_simpul}")
+        print(f"Total Langkah       = {len(result_path)-1} steps")
+        print(f"Waktu               = {(timeAfter2-timeBefore)} s")
+        print(f"Simpul Dibangkitkan = {total_simpul} simpul")
