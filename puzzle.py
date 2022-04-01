@@ -1,18 +1,17 @@
 import queue
+import time
 import os
-import time        
 
 class NodePuzzle:
-    def __init__(self, parent, puzzle, empty_tile, f, g, level):
+    def __init__(self, parent, puzzle, empty_tile, f, g):
         self.parent = parent
         self.puzzle = puzzle
         self.empty_tile = empty_tile
         self.f = f
         self.g = g
-        self.level = level
 
-    def __lt__(self, next):
-        return self.f + self.g + self.level <= next.f + next.g + next.level
+    def __lt__(self, other):
+        return self.f + self.g <= other.f + other.g
 
 def readPuzzle(file_name): 
     file_path = os.getcwd()
@@ -32,25 +31,17 @@ def readPuzzle(file_name):
         print("File not found!")
         exit(0)
         
-def isPossibleToSolve(puzzle) :
+def nilaiKurang(puzzle) :
     plusOne = set([1, 3, 4, 6, 9, 11, 12, 14])
-    kurang_sum = 0
-    position = {}
-    for i in range(16):
-        position[puzzle[i]] = i
-
-    for i in range(16):
-        kurang_sum += kurang(i+1, position)
-        
-    if(position[16] in plusOne):
-        kurang_sum += 1
-        
-    print(f"Nilai KURANG => {kurang_sum}")
+    nilai_kurang = 0
+    position = findPosition(puzzle)
     
-    if(kurang_sum%2 == 1):
-        return False
-    
-    return True
+    for i in range(16):
+        nilai_kurang += kurang(i+1, position)
+    if position[16] in plusOne:
+        nilai_kurang += 1
+        
+    return nilai_kurang
 
 def kurang(i, position):
     res = 0
@@ -60,29 +51,33 @@ def kurang(i, position):
             res += 1
     return res
 
-def nextPuzzle(source_puzzle, moves, costs_f, visited):
+def findPosition(puzzle):
+    position = {}
+    for i in range(16):
+        position[puzzle[i]] = i
+    return position
+
+def nextPuzzle(source_puzzle, moves, visited):
     list_next_puzzle = []
     source_empty_tile = source_puzzle.empty_tile
     for move in moves[source_empty_tile]:
-        cur = list(source_puzzle.puzzle)
-        cur[source_empty_tile] = cur[move]
-        cur[move] = 16
-        cur = tuple(cur)
-        if cur in visited:
-            continue
+        cur_puzzle = list(source_puzzle.puzzle)
+        cur_puzzle[source_empty_tile] = cur_puzzle[move]
+        cur_puzzle[move] = 16
+        cur_puzzle = tuple(cur_puzzle)
         
-        new_f = costs_f[move]
+        if cur_puzzle in visited:
+            continue
+
         new_g = source_puzzle.g
         if source_puzzle.puzzle[move] != move + 1:
             new_g -= 1
         if source_puzzle.puzzle[move] != source_empty_tile + 1:
             new_g += 1
         
-        next_puzzle = NodePuzzle(source_puzzle, cur, move, new_f, new_g, source_puzzle.level + 1)
+        next_puzzle = NodePuzzle(source_puzzle, cur_puzzle, move, source_puzzle.f + 1, new_g)
         list_next_puzzle.append(next_puzzle)
-        
     return list_next_puzzle
-    
 
 def generateMove():
     moves = {}
@@ -104,16 +99,6 @@ def generateMove():
     moves[15] = [11, 14]
     return moves  
 
-def generateCostF(start):
-    row_start = start//4
-    col_start = start%4
-    costs_f = []
-    for i in range(16):
-        row_i = i//4
-        col_i = i%4
-        costs_f.append(abs(row_start-row_i) + abs(col_start-col_i))
-    return costs_f
-
 def costG(puzzle):
     diff = 0
     for i in range(16):
@@ -124,61 +109,58 @@ def costG(puzzle):
     return diff
 
 def solvePuzzle(source):
-    position = {}
-    for i in range(16):
-        position[source[i]] = i
+    position = findPosition(source)
     moves = generateMove()
-    costs_f = generateCostF(position[16])
     
-    source_puzzle = NodePuzzle(None, source, position[16], costs_f[position[16]], costG(source), 0)
-    target = tuple([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+    source_puzzle = NodePuzzle(None, source, position[16], 0, costG(source))
     visited = set()
     prio_queue = queue.PriorityQueue()
+    total_simpul = 1
 
-    if source == target:
-        return source_puzzle
+    if source_puzzle.g == 0:
+        return tuple([source_puzzle, 0])
     
     visited.add(source)
     prio_queue.put(source_puzzle)
-    total_simpul = 1
     while not prio_queue.empty():
         cur_puzzle = prio_queue.get()
-
-        list_next_puzzle = nextPuzzle(cur_puzzle, moves, costs_f, visited)
+        list_next_puzzle = nextPuzzle(cur_puzzle, moves, visited)
         for next_puzzle in list_next_puzzle:
             total_simpul += 1
             if next_puzzle.g == 0:
-                print(f"Total simpul: {total_simpul}")
-                return next_puzzle
+                return tuple([next_puzzle, total_simpul])
             visited.add(next_puzzle.puzzle)
             prio_queue.put(next_puzzle)
 
 if __name__ == "__main__" :
     fileName = str(input())
     source = readPuzzle(fileName)
+    nilai_kurang = nilaiKurang(source)
     
-    if not isPossibleToSolve(source):
-        print("tidak mungkin selesai!")
+    if nilai_kurang%2:
+        print(f"Nilai Kurang        = {nilai_kurang}")
+        print("Impossible to Solve!")
     else :
         timeBefore = time.time()
-        solved_node = solvePuzzle(source)
-        timeAfter = time.time()
-        print(f"Waktu: {timeAfter-timeBefore}")
-        
+        solve = solvePuzzle(source)
+        solved_node = solve[0]
+        total_simpul = solve[1]
         result_path = []
-
+        timeAfter2 = time.time()
+        
         while solved_node != None:
             result_path.append(solved_node.puzzle)
             solved_node = solved_node.parent
         
         for i in range(len(result_path)-1, -1, -1):
-            for j in range(16):
-                print(result_path[i][j], end=" ")
-                if j%4 == 3:
-                    print()
+            for k in range(0,4):
+                print("[", end=" ")
+                for j in range(k*4,k*4+4):
+                    print(result_path[i][j], end=" ")
+                print("]")
             print()
         
-        print(len(result_path))
-        
-        timeAfter2 = time.time()
-        print(f"Waktu: {timeAfter2-timeBefore}")
+        print(f"Nilai Kurang        = {nilai_kurang}")
+        print(f"Total Langkah       = {len(result_path)-1}")
+        print(f"Waktu               = {(((timeAfter2-timeBefore)*100)//1)/100}")
+        print(f"Simpul Dibangkitkan = {total_simpul}")
