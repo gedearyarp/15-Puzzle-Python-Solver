@@ -3,6 +3,7 @@ import queue
 import time
 import os
 
+# Membuat NodePuzzle berisi parent, konfigurasi puzzle tersebut, petak yang kosong, cost f, dan cost g
 class NodePuzzle:
     def __init__(self, parent, puzzle, empty_tile, f, g):
         self.parent = parent
@@ -11,12 +12,14 @@ class NodePuzzle:
         self.f = f
         self.g = g
 
+    # Pada priority queue akan dibandingkan berdasarkan jumlah cost f dan g yang lebih kecil
     def __lt__(self, other):
         return self.f + self.g <= other.f + other.g
 
+# Read konfigurasi puzzle dari file txt pada folder test
 def readPuzzle(file_name): 
     file_path = os.getcwd()
-    file_path += f"//test//{file_name}"
+    file_path += f"//test//{file_name}" 
     
     try:
         source = []
@@ -30,8 +33,9 @@ def readPuzzle(file_name):
     except:
         print("File not found!")
         exit(0)
-        
-def nilaiKurang(puzzle) :
+
+# Menghitung jumlah semua nilai kurang pada puzzle
+def nilaiKurang(puzzle) : 
     plusOne = set([1, 3, 4, 6, 9, 11, 12, 14])
     nilai_kurang = 0
     position = findPosition(puzzle)
@@ -42,6 +46,7 @@ def nilaiKurang(puzzle) :
         nilai_kurang += 1
     return nilai_kurang
 
+# Menghitung spesifik nilai kurang pada suato petak
 def kurang(i, position):
     res = 0
     curPosition = position[i]
@@ -50,12 +55,14 @@ def kurang(i, position):
             res += 1
     return res
 
+# Mengembalikan posisi dari setiap angka pada petak
 def findPosition(puzzle):
     position = {}
     for i in range(16):
         position[puzzle[i]] = i
     return position
 
+# Mengembalikan list berisi petak-petak selanjutnya yang mungkin berdasarkan parent puzzlenya
 def nextPuzzle(source_puzzle, moves, visited):
     list_next_puzzle = []
     source_empty_tile = source_puzzle.empty_tile
@@ -78,6 +85,7 @@ def nextPuzzle(source_puzzle, moves, visited):
         list_next_puzzle.append(next_puzzle)
     return list_next_puzzle
 
+#Menghitung nilai cost G pada puzzle
 def costG(puzzle):
     diff = 0
     for i in range(16):
@@ -87,6 +95,7 @@ def costG(puzzle):
             diff+=1
     return diff
 
+# Mengembalikan semua kemungkinan move pada puzzle karena dibentuk 1 dimensi
 def generateMove():
     moves = {}
     moves[0] = [1, 4]
@@ -107,6 +116,7 @@ def generateMove():
     moves[15] = [11, 14]
     return moves  
 
+# Algoritma utama untuk menyelesaikan puzzle
 def solvePuzzle(source):
     position = findPosition(source)
     moves = generateMove()
@@ -119,8 +129,10 @@ def solvePuzzle(source):
     if source_puzzle.g == 0:
         return tuple([source_puzzle, 0])
     
-    visited.add(source)
+    visited.add(source) 
     prio_queue.put(source_puzzle)
+    
+    # Melakukan iterasi pada prio_queue berdasarkan nilai cost (f + g) terendah
     while not prio_queue.empty():
         cur_puzzle = prio_queue.get()
         list_next_puzzle = nextPuzzle(cur_puzzle, moves, visited)
@@ -131,11 +143,14 @@ def solvePuzzle(source):
             visited.add(next_puzzle.puzzle)
             prio_queue.put(next_puzzle)
 
+# Main program
 if __name__ == "__main__" :
     fileName = str(input())
     source = readPuzzle(fileName)
     nilai_kurang = nilaiKurang(source)
     
+    # Jika nilai_kurang bernilai ganjil maka program tidak akan melanjutkan ke algoritma utama
+    # karena tidak bisa diselesaikan
     if nilai_kurang%2:
         print(f"Nilai Kurang        = {nilai_kurang}")
         print("Impossible to Solve!")
@@ -147,13 +162,16 @@ if __name__ == "__main__" :
         result_path = []
         timeAfter2 = time.time()
         
+        # Membalikkan urutan puzzle karena return node merupakan node terakhir yang sudah solved
         while solved_node != None:
             result_path.append(solved_node.puzzle)
             solved_node = solved_node.parent
         
+        # Memberikan output langkah-langkah bergeraknya puzzle
         for i in range(len(result_path)-1, -1, -1):
             print(np.array(result_path[i]).reshape(4,4), '\n')
         
+        # Memberikan output nilai kurang, total langkah, waktu berjalannya program, dan jumlah simpul dibangkitkan
         print(f"Nilai Kurang        = {nilai_kurang}")
         print(f"Total Langkah       = {len(result_path)-1} steps")
         print(f"Waktu               = {(timeAfter2-timeBefore)} s")
