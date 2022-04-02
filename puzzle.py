@@ -85,7 +85,7 @@ def nextPuzzle(source_puzzle, moves, visited):
         list_next_puzzle.append(next_puzzle)
     return list_next_puzzle
 
-#Menghitung nilai cost G pada puzzle
+# Menghitung nilai cost G pada puzzle
 def costG(puzzle):
     diff = 0
     for i in range(16):
