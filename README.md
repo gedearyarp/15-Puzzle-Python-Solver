@@ -1,5 +1,10 @@
 # 15-Puzzle-Python-Solver
 
+## Authors
+| Nama                           | NIM      |
+| ------------------------------ | -------- |
+| I Gede Arya Raditya Parameswara          | 13520036 |
+
 ## How to run?
 1. Run program dengan menjalankan `python3 puzzle.py` pada terminal dan tekan enter,
 2. Pilih testcase yang tersedia pada folder test, misal `1.txt` lalu tekan enter lagi,
