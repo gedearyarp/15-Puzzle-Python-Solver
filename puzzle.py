@@ -53,6 +53,7 @@ def kurang(i, position):
     for j in range(1, i):
         if position[j] > curPosition:
             res += 1
+    print(f"kurang({i}) = {res}")
     return res
 
 # Mengembalikan posisi dari setiap angka pada petak
@@ -152,7 +153,7 @@ if __name__ == "__main__" :
     # Jika nilai_kurang bernilai ganjil maka program tidak akan melanjutkan ke algoritma utama
     # karena tidak bisa diselesaikan
     if nilai_kurang%2:
-        print(f"Nilai Kurang        = {nilai_kurang}")
+        print(f"\nNilai Kurang = {nilai_kurang}")
         print("Impossible to Solve!")
     else :
         timeBefore = time.time()
@@ -166,6 +167,8 @@ if __name__ == "__main__" :
         while solved_node != None:
             result_path.append(solved_node.puzzle)
             solved_node = solved_node.parent
+        
+        print("\nLangkah :")
         
         # Memberikan output langkah-langkah bergeraknya puzzle
         for i in range(len(result_path)-1, -1, -1):
